@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>数学Ⅰ 4科 1学期期末考査対策 ～不等式・集合・命題の魔王討伐記～</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#08080f;--card:#12121e;--card2:#1a1a2e;
+  --gold:#f0c040;--blue:#3b82f6;--purple:#a855f7;
+  --green:#22c55e;--red:#ef4444;--gray:#4b5563;
+  --text:#e2e8f0;--sub:#94a3b8;
+}
+html,body{width:100%;height:100dvh;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DotGothic16',monospace;}
+canvas#stars{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* ===== 共通 ===== */
+.screen{position:fixed;top:0;left:0;width:100%;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;z-index:10;overflow-y:auto;padding:8px;}
+.screen.hidden{display:none!important;}
+.card{background:var(--card);border:1px solid #2a2a4a;border-radius:12px;padding:12px;}
+.card2{background:var(--card2);border:1px solid #2a2a4a;border-radius:8px;padding:10px;}
+.gold{color:var(--gold);}
+.green{color:var(--green);}
+.red{color:var(--red);}
+.btn{display:inline-block;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-family:'DotGothic16',monospace;font-size:1rem;transition:transform .1s,opacity .2s;}
+.btn:active{transform:scale(.96);}
+.btn-gold{background:linear-gradient(135deg,#f0c040,#d4a010);color:#08080f;font-weight:bold;}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-gray{background:var(--gray);color:#fff;}
+
+/* 数式 */
+.mj{font-family:"Times New Roman",serif;font-style:italic;}
+.mj sup{font-size:.72em;vertical-align:super;line-height:0;}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-style:italic;font-family:"Times New Roman",serif;}
+.fr .n{border-bottom:1.5px solid currentColor;padding:0 4px;}
+.fr .d{padding:0 4px;}
+.sq{display:inline-flex;align-items:flex-end;}
+.sq-s{font-size:1.1em;}
+.sq-i{border-top:1.5px solid currentColor;padding:0 3px 0 1px;font-style:italic;font-family:"Times New Roman",serif;}
+
+/* ===== タイトル画面 ===== */
+#titleScreen{justify-content:center;gap:16px;}
+.title-main{font-size:1.3rem;color:var(--gold);text-align:center;line-height:1.8;text-shadow:0 0 20px #f0c04088;}
+.title-sub{font-size:.85rem;color:var(--sub);text-align:center;}
+.title-enemy{font-size:5rem;animation:float 3s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-15px);}}
+
+/* ===== バトル画面 ===== */
+#battleScreen{gap:6px;padding:6px 8px;}
+.hud{width:100%;display:flex;gap:6px;align-items:stretch;}
+.hero-hud{flex:1;background:var(--card);border-radius:10px;padding:8px;}
+.enemy-hud{flex:1;background:var(--card);border-radius:10px;padding:8px;}
+.hud-label{font-size:.7rem;color:var(--sub);margin-bottom:2px;}
+.hp-bar-wrap{height:10px;background:#1e1e3a;border-radius:5px;overflow:hidden;}
+.hp-bar{height:100%;border-radius:5px;transition:width .4s ease;}
+.hp-bar.hero{background:linear-gradient(90deg,var(--green),#16a34a);}
+.hp-bar.enemy{background:linear-gradient(90deg,var(--red),#b91c1c);}
+.hp-text{font-size:.7rem;color:var(--sub);margin-top:2px;}
+.hud-mid{display:flex;gap:6px;width:100%;}
+.score-box{background:var(--card);border-radius:8px;padding:6px 10px;text-align:center;flex:1;}
+.score-label{font-size:.65rem;color:var(--sub);}
+.score-val{font-size:1rem;color:var(--gold);font-weight:bold;}
+.combo-box{background:var(--card);border-radius:8px;padding:6px 10px;text-align:center;flex:1;}
+.coin-box{background:var(--card);border-radius:8px;padding:6px 10px;text-align:center;flex:1;}
+.hint-btn{width:100%;margin-top:4px;padding:5px;border-radius:6px;border:1px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;font-family:'DotGothic16',monospace;font-size:.75rem;}
+.hint-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* 敵エリア */
+.enemy-area{width:100%;text-align:center;position:relative;}
+.enemy-emoji{font-size:3.5rem;display:inline-block;transition:transform .2s;}
+.enemy-emoji.shake{animation:shake .4s;}
+.enemy-emoji.dead{animation:fall .5s forwards;}
+.enemy-emoji.boss-glow{filter:drop-shadow(0 0 16px var(--gold));}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}50%{transform:translateX(-8px);}}
+@keyframes fall{0%{transform:scale(1) rotate(0);}100%{transform:scale(0) rotate(180deg);opacity:0;}}
+.enemy-name{font-size:.85rem;color:var(--gold);}
+.enemy-info{font-size:.7rem;color:var(--sub);}
+
+/* バトルログ */
+.battle-log{width:100%;background:var(--card);border-radius:8px;padding:6px 10px;min-height:38px;}
+.log-line{font-size:.75rem;line-height:1.5;color:var(--sub);}
+
+/* 問題エリア */
+.question-area{width:100%;background:var(--card);border-radius:10px;padding:10px;}
+.q-text{font-family:'Noto Sans JP',sans-serif;font-size:.9rem;line-height:1.7;margin-bottom:10px;}
+.q-num{color:var(--purple);font-weight:bold;margin-right:4px;}
+
+/* 選択肢 */
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.choice-btn{background:var(--card2);border:2px solid #2a2a4a;border-radius:8px;padding:10px 6px;cursor:pointer;text-align:center;font-family:'Noto Sans JP','Times New Roman',sans-serif;font-size:.9rem;line-height:1.4;color:var(--text);transition:border-color .15s,background .15s;}
+.choice-btn:hover:not(:disabled){border-color:var(--blue);}
+.choice-btn.correct{border-color:var(--green)!important;background:#052;color:#fff;}
+.choice-btn.wrong{border-color:var(--red)!important;background:#500;}
+.choice-btn.grayed{opacity:.35;pointer-events:none;border-color:var(--gray)!important;}
+.choice-btn:disabled{cursor:not-allowed;}
+.choice-label{color:var(--gold);font-size:.75rem;margin-right:3px;}
+
+/* numpad */
+.numpad-display{width:100%;background:#0a0a18;border:2px solid var(--blue);border-radius:8px;padding:8px 12px;font-size:1.2rem;text-align:right;min-height:40px;margin-bottom:8px;font-family:"Times New Roman",serif;}
+.numpad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.np-btn{background:var(--card2);border:1px solid #2a2a4a;border-radius:6px;padding:10px;cursor:pointer;font-size:.95rem;text-align:center;font-family:'DotGothic16',monospace;transition:background .1s;}
+.np-btn:active{background:#2a2a4a;}
+.np-confirm{background:var(--green);color:#fff;font-size:.85rem;grid-column:span 2;}
+.np-back{background:var(--red);color:#fff;}
+
+/* ===== 結果画面 ===== */
+#resultScreen{justify-content:center;gap:12px;padding:20px;}
+.result-icon{font-size:4rem;text-align:center;}
+.result-label{font-size:1.5rem;font-weight:bold;text-align:center;}
+.result-correct{color:var(--green);}
+.result-wrong{color:var(--red);}
+.result-explanation{width:100%;max-width:500px;}
+.exp-title{font-size:.8rem;color:var(--gold);margin-bottom:6px;}
+.exp-body{font-family:'Noto Sans JP',sans-serif;font-size:.85rem;line-height:1.7;color:var(--text);}
+
+/* ===== クリア / ゲームオーバー 画面 ===== */
+#clearScreen,#gameoverScreen,#stageClearScreen{justify-content:center;gap:10px;padding:20px;}
+.clear-title{font-size:1.4rem;color:var(--gold);text-align:center;}
+.final-score{text-align:center;font-size:1rem;}
+.badge-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:400px;}
+.badge{border:2px solid var(--gray);border-radius:8px;padding:6px 10px;font-size:.75rem;text-align:center;color:var(--gray);}
+.badge.earned{border-color:var(--gold);color:var(--gold);background:#1a1500;}
+
+/* コンボバナー */
+#comboBanner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;pointer-events:none;text-align:center;font-size:2rem;font-weight:bold;color:var(--gold);text-shadow:0 0 20px #f0c040;opacity:0;transition:opacity .3s;}
+
+/* フラッシュ */
+#flash{position:fixed;top:0;left:0;width:100%;height:100%;z-index:50;pointer-events:none;opacity:0;}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div id="comboBanner">🔥 COMBO!</div>
+<div id="flash"></div>
+
+<!-- ===== タイトル画面 ===== -->
+<div id="titleScreen" class="screen">
+  <div class="title-enemy">👑</div>
+  <div class="title-main">数学Ⅰ 4科<br>1学期期末考査対策<br>～不等式・集合・命題の魔王討伐記～</div>
+  <div class="title-sub">全40問・チャンク分割 / 1セッション10〜15問<br>不等式・集合・命題・証明 を攻略せよ！</div>
+  <button class="btn btn-gold" id="startBtn" style="font-size:1.1rem;padding:14px 32px;">⚔ ゲームスタート</button>
+  <div class="title-sub" style="font-size:.75rem;">数学Ⅰ / R8 期末対策プリント準拠</div>
+</div>
+
+<!-- ===== バトル画面 ===== -->
+<div id="battleScreen" class="screen hidden">
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hero-hud">
+      <div class="hud-label">⚔ 勇者HP</div>
+      <div class="hp-bar-wrap"><div class="hp-bar hero" id="heroBar" style="width:100%"></div></div>
+      <div class="hp-text" id="heroHpText">20/20</div>
+    </div>
+    <div class="enemy-hud">
+      <div class="hud-label" id="enemyLabel">👹 敵HP</div>
+      <div class="hp-bar-wrap"><div class="hp-bar enemy" id="enemyBar" style="width:100%"></div></div>
+      <div class="hp-text" id="enemyHpText">?/?</div>
+    </div>
+  </div>
+  <div class="hud-mid">
+    <div class="score-box"><div class="score-label">SCORE</div><div class="score-val" id="scoreDisp">0/0</div></div>
+    <div class="combo-box"><div class="score-label">🔥COMBO</div><div class="score-val" id="comboDisp">0</div></div>
+    <div class="coin-box">
+      <div class="score-label">🪙COIN</div>
+      <div class="score-val" id="coinDisp">0</div>
+      <button class="hint-btn" id="hintBtn" onclick="useHint()">ヒント(3枚)</button>
+    </div>
+  </div>
+  <!-- 敵エリア -->
+  <div class="enemy-area">
+    <div class="enemy-emoji" id="enemyEmoji">👾</div>
+    <div class="enemy-name" id="enemyName">???</div>
+    <div class="enemy-info" id="enemyInfoText">Lv.? HP ?/?</div>
+  </div>
+  <!-- バトルログ -->
+  <div class="battle-log">
+    <div class="log-line" id="logLine1">⚔ 戦闘開始！</div>
+    <div class="log-line" id="logLine2"></div>
+  </div>
+  <!-- 問題エリア -->
+  <div class="question-area" id="questionArea">
+    <div class="q-text" id="qText">読み込み中...</div>
+    <div id="answerArea"></div>
+  </div>
+</div>
+
+<!-- ===== 結果画面 ===== -->
+<div id="resultScreen" class="screen hidden">
+  <div class="result-icon" id="resultIcon">✅</div>
+  <div class="result-label" id="resultLabel">正解！</div>
+  <div class="result-explanation card">
+    <div class="exp-title">📖 解説</div>
+    <div class="exp-body" id="expBody"></div>
+  </div>
+  <button class="btn btn-gold" id="nextBtn">次へ →</button>
+</div>
+
+<!-- ===== ステージクリア画面 ===== -->
+<div id="stageClearScreen" class="screen hidden">
+  <div class="title-enemy" style="font-size:3rem;">🎉</div>
+  <div class="clear-title">STAGE CLEAR！</div>
+  <div class="final-score" id="stageInfo"></div>
+  <div style="color:var(--sub);font-size:.85rem;text-align:center;" id="remainInfo"></div>
+  <button class="btn btn-gold" id="continueBtn" style="margin-top:12px;">続きに挑戦する →</button>
+  <button class="btn btn-gray" id="restartFromStageBtn" style="margin-top:6px;font-size:.8rem;">最初からやり直す</button>
+</div>
+
+<!-- ===== クリア画面 ===== -->
+<div id="clearScreen" class="screen hidden">
+  <div class="title-enemy" style="font-size:3rem;">🏆</div>
+  <div class="clear-title">全問クリア！<br>数式魔王を完全封印した！</div>
+  <div class="final-score" id="finalScore"></div>
+  <div id="titleBadge" style="font-size:1rem;color:var(--gold);text-align:center;"></div>
+  <div class="badge-grid" id="badgeGrid"></div>
+  <button class="btn btn-gold" id="restartBtn" style="margin-top:12px;">最初からやり直す</button>
+</div>
+
+<!-- ===== ゲームオーバー画面 ===== -->
+<div id="gameoverScreen" class="screen hidden">
+  <div class="title-enemy" style="font-size:3rem;">💀</div>
+  <div class="clear-title" style="color:var(--red);">GAME OVER</div>
+  <div class="final-score" id="goScore" style="color:var(--sub)"></div>
+  <button class="btn btn-gold" id="retryBtn" style="margin-top:12px;">もう一度挑戦する</button>
+</div>
+
+<script>
+// ===== 星空 =====
+(function(){
+  const c=document.getElementById('stars'),ctx=c.getContext('2d');
+  c.width=window.innerWidth;c.height=window.innerHeight;
+  const stars=Array.from({length:150},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.5+.3,a:Math.random()}));
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(s=>{s.a+=.005;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,220,${.3+.5*Math.abs(Math.sin(s.a))})`;ctx.fill();});
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ===== 数式ヘルパー =====
+const M=(s)=>`<span class="mj">${s}</span>`;
+const FR=(n,d)=>`<span class="fr"><span class="n">${n}</span><span class="d">${d}</span></span>`;
+const SQ=(i)=>`<span class="sq"><span class="sq-s">√</span><span class="sq-i">${i}</span></span>`;
+const SP=(b,e)=>`${b}<sup>${e}</sup>`;
+
+// ===== 問題データ =====
+const PROBLEMS = [
+  // ===== 問1: 不等号の向き (select型) =====
+  {id:'p1_1', prob:'問1(1)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問1(1)</span>a &lt; b のとき，a+4 ▭ b+4 の ▭ に入る不等号は？`,
+   choices:['<','>','=','≦'], answer:0,
+   exp:'両辺に同じ数を加えても不等号の向きは変わらない。a+4 &lt; b+4'},
+  {id:'p1_2', prob:'問1(2)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問1(2)</span>a &lt; b のとき，a&minus;3 ▭ b&minus;3 の ▭ は？`,
+   choices:['>','<','=','≦'], answer:1,
+   exp:'両辺から同じ数を引いても不等号の向きは変わらない。a&minus;3 &lt; b&minus;3'},
+  {id:'p1_3', prob:'問1(3)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問1(3)</span>a &lt; b のとき，5a ▭ 5b の ▭ は？`,
+   choices:['>','=','<','≦'], answer:2,
+   exp:'正の数 5 をかけると不等号の向きは変わらない。5a &lt; 5b'},
+  {id:'p1_4', prob:'問1(4)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問1(4)</span>a &lt; b のとき，&minus;2a ▭ &minus;2b の ▭ は？`,
+   choices:['<','=','≦','>'], answer:3,
+   exp:'負の数 &minus;2 をかけると不等号の向きが逆になる。&minus;2a &gt; &minus;2b'},
+  {id:'p1_5', prob:'問1(5)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問1(5)</span>a &lt; b のとき，${FR('a','4')} ▭ ${FR('b','4')} の ▭ は？`,
+   choices:['<','>','=','≧'], answer:0,
+   exp:'正の数 4 で割っても不等号の向きは変わらない。'+FR('a','4')+' &lt; '+FR('b','4')},
+  {id:'p1_6', prob:'問1(6)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問1(6)</span>a &lt; b のとき，&minus;${FR('a','3')} ▭ &minus;${FR('b','3')} の ▭ は？`,
+   choices:['<','>','=','≧'], answer:1,
+   exp:'負の数 &minus;'+FR('1','3')+' をかけると（または負の数で割ると）不等号の向きが逆になる。&minus;'+FR('a','3')+' &gt; &minus;'+FR('b','3')},
+
+  // ===== 問3: 1次不等式 (numpad型) =====
+  {id:'p3_1', prob:'問3(1)', type:'choice4',
+   text:`<span class="q-num">問3(1)</span>次の1次不等式を解け。<br>x &minus; 2 &lt; 3`,
+   choices:['x < 5','x < 1','x < −1','x < −5'], answer:0,
+   exp:'x &minus; 2 &lt; 3<br>両辺に 2 を加えると x &lt; 5'},
+  {id:'p3_2', prob:'問3(2)', type:'choice4',
+   text:`<span class="q-num">問3(2)</span>次の1次不等式を解け。<br>2x ≧ 8`,
+   choices:['x ≧ 4','x ≧ 16','x ≦ 4','x ≦ −4'], answer:0,
+   exp:'2x ≧ 8<br>両辺を 2 で割ると x ≧ 4'},
+  {id:'p3_3', prob:'問3(3)', type:'choice4',
+   text:`<span class="q-num">問3(3)</span>次の1次不等式を解け。<br>&minus;7x ≧ 21`,
+   choices:['x ≦ −3','x ≧ −3','x ≦ 3','x ≧ 3'], answer:0,
+   exp:'&minus;7x ≧ 21<br>両辺を &minus;7 で割る（負の数で割るので不等号逆転）<br>x ≦ &minus;3'},
+  {id:'p3_4', prob:'問3(4)', type:'choice4',
+   text:`<span class="q-num">問3(4)</span>次の1次不等式を解け。<br>8x &minus; 7 &lt; 9`,
+   choices:['x < 2','x < −2','x > 2','x < 16'], answer:0,
+   exp:'8x &minus; 7 &lt; 9<br>8x &lt; 16<br>x &lt; 2'},
+  {id:'p3_5', prob:'問3(5)', type:'choice4',
+   text:`<span class="q-num">問3(5)</span>次の1次不等式を解け。<br>7 + 2x &lt; 5x &minus; 6`,
+   choices:[`x > ${FR('13','3')}`,'x > 1','x < 1',`x > ${FR('1','3')}`], answer:0,
+   exp:'7 + 2x &lt; 5x &minus; 6<br>右辺に移項: 7 + 6 &lt; 5x &minus; 2x<br>13 &lt; 3x<br>x &gt; '+FR('13','3')},
+  {id:'p3_6', prob:'問3(6)', type:'choice4',
+   text:`<span class="q-num">問3(6)</span>次の1次不等式を解け。<br>3(2x+1) &gt; x&minus;2`,
+   choices:['x > −1','x > 1','x < −1',`x > ${FR('1','5')}`], answer:0,
+   exp:'3(2x+1) &gt; x&minus;2<br>6x+3 &gt; x&minus;2<br>5x &gt; &minus;5<br>x &gt; &minus;1'},
+  {id:'p3_7', prob:'問3(7)', type:'choice4',
+   text:`<span class="q-num">問3(7)</span>次の1次不等式を解け。<br>${FR('2','3')}x &minus; ${FR('1','6')} ≧ ${FR('1','4')}x &minus; 1`,
+   choices:['x ≧ −2','x ≦ −2','x ≧ 2','x ≦ 2'], answer:0,
+   exp:'両辺に 12 をかける<br>8x &minus; 2 ≧ 3x &minus; 12<br>5x ≧ &minus;10<br>x ≧ &minus;2'},
+  {id:'p3_8', prob:'問3(8)', type:'choice4',
+   text:`<span class="q-num">問3(8)</span>次の1次不等式を解け。<br>0.2x &minus; 1 ≦ 0.4x &minus; 1.5`,
+   choices:[`x ≧ ${FR('5','2')}`,`x ≦ ${FR('5','2')}`,`x ≦ −${FR('5','2')}`,`x ≧ ${FR('5','4')}`], answer:0,
+   exp:'両辺に 10 をかける<br>2x &minus; 10 ≦ 4x &minus; 15<br>&minus;2x ≦ &minus;5<br>x ≧ '+FR('5','2')},
+
+  // ===== 問4: 連立不等式 =====
+  {id:'p4_1', prob:'問4', type:'choice4',
+   text:`<span class="q-num">問4</span>次の連立不等式を解け。<br>{ 3x+8 ≧ 4x&minus;3<br>{ 2(3x+1) &gt; x&minus;2`,
+   choices:[`−${FR('4','5')} < x ≦ 11`,`0 < x ≦ 11`,`x > −${FR('4','5')}`,`−${FR('4','5')} < x < 11`], answer:0,
+   exp:`① 3x+8 ≧ 4x−3 → −x ≧ −11 → x ≦ 11<br>② 2(3x+1) > x−2 → 6x+2 > x−2 → 5x > −4 → x > −${FR('4','5')}<br>共通部分：−${FR('4','5')} < x ≦ 11`},
+  
+
+  // ===== 問5: A≦B≦Cの不等式 =====
+  {id:'p5_1', prob:'問5', type:'choice4',
+   text:`<span class="q-num">問5</span>次の不等式を解け。<br>&minus;8 ≦ 3x&minus;5 ≦ 4`,
+   choices:['−1 ≦ x ≦ 3','−3 ≦ x ≦ 3','−1 < x < 3','0 ≦ x ≦ 3'], answer:0,
+   exp:'各辺に 5 を加える<br>&minus;8+5 ≦ 3x ≦ 4+5<br>&minus;3 ≦ 3x ≦ 9<br>各辺を 3 で割る<br>&minus;1 ≦ x ≦ 3'},
+  
+
+  // ===== 問6: 文章題 =====
+  {id:'p6_1', prob:'問6', type:'choice4',
+   text:`<span class="q-num">問6</span>1個140円のケーキと1個100円のシュークリームを合わせて20個買い，代金の合計を2500円以下にしたい。ケーキは最大で何個買えるか。`,
+   choices:['12個','13個','11個','10個'], answer:0,
+   exp:'ケーキをx個とすると，シュークリームは(20&minus;x)個<br>140x + 100(20&minus;x) ≦ 2500<br>140x + 2000 &minus; 100x ≦ 2500<br>40x ≦ 500<br>x ≦ 12.5<br>xは整数なのでx ≦ 12，つまり最大 <strong>12個</strong>'},
+
+  // ===== 問7: 分母の有理化 =====
+  {id:'p7_1', prob:'問7(1)', type:'choice4',
+   text:`<span class="q-num">問7(1)</span>次の数の分母を有理化せよ。<br>${FR('1',SQ('6'))}`,
+   choices:[FR(SQ('6'),'6'),FR('1',SQ('6')),FR(SQ('6'),'3'),FR('2',SQ('6'))], answer:0,
+   exp:FR('1',SQ('6'))+'= '+FR('1&times;'+SQ('6'),SQ('6')+'&times;'+SQ('6'))+'= '+FR(SQ('6'),'6'),
+  },
+  {id:'p7_2', prob:'問7(2)', type:'choice4',
+   text:`<span class="q-num">問7(2)</span>次の数の分母を有理化せよ。<br>${FR(SQ('2'),SQ('3')+'−'+SQ('2'))}`,
+   choices:[`2+${SQ('6')}`,`${SQ('6')}−2`,`2−${SQ('6')}`,`${SQ('6')}+1`], answer:0,
+   exp:`${FR(SQ('2'),SQ('3')+'−'+SQ('2'))} × ${FR(SQ('3')+'+'+SQ('2'),SQ('3')+'+'+SQ('2'))} = ${FR(SQ('6')+'+2','3−2')} = 2+${SQ('6')}`,
+  },
+
+  // ===== 問8: 式の計算（有理化を使った計算）=====
+  {id:'p8_1', prob:'問8', type:'choice4',
+   text:`<span class="q-num">問8</span>次の式を計算せよ。<br>${FR('1',SQ('2')+'+1')}+${FR('1','3+'+SQ('2'))}`,
+   choices:[`${FR('6'+SQ('2')+'−4','7')}`,`${FR('6'+SQ('2')+'+4','7')}`,`${FR('4'+SQ('2')+'−2','5')}`,`${FR(SQ('2'),'3')}`], answer:0,
+   exp:`${FR('1',SQ('2')+'+1')} = ${FR(SQ('2')+'−1','('+SQ('2')+'+1)('+SQ('2')+'−1)')} = ${FR(SQ('2')+'−1','2−1')} = ${SQ('2')}−1<br>${FR('1','3+'+SQ('2'))} = ${FR('3−'+SQ('2'),'(3+'+SQ('2')+')(3−'+SQ('2')+')')} = ${FR('3−'+SQ('2'),'9−2')} = ${FR('3−'+SQ('2'),'7')}<br>合計 = ${SQ('2')}−1 + ${FR('3−'+SQ('2'),'7')} = ${FR('7'+SQ('2')+'−7+3−'+SQ('2'),'7')} = ${FR('6'+SQ('2')+'−4','7')}`},
+
+  // ===== 問9: 集合の演算（∩・∪）=====
+  {id:'p9_1', prob:'問9(1)', type:'choice4',
+   text:`<span class="q-num">問9(1)</span>2つの集合 A={1, 2, 4, 8, 16}，B={2, 4, 6, 8, 10} について<br>A∩B を求めよ。（要素を {} 内に列挙）`,
+   choices:['{2, 4, 8}','{1, 2, 4, 8, 16}','{2, 4, 6, 8}','{4, 8}'], answer:0,
+   exp:'A∩B は A と B の共通要素。<br>A={1,2,4,8,16}，B={2,4,6,8,10}<br>両方に含まれる要素：2, 4, 8<br>∴ A∩B = {2, 4, 8}'},
+  {id:'p9_2', prob:'問9(2)', type:'choice4',
+   text:`<span class="q-num">問9(2)</span>2つの集合 A={1, 2, 4, 8, 16}，B={2, 4, 6, 8, 10} について<br>A∪B を求めよ。`,
+   choices:['{1, 2, 4, 6, 8, 10, 16}','{1, 2, 4, 8, 16}','{2, 4, 6, 8, 10}','{1, 2, 4, 6, 8, 10, 12, 16}'], answer:0,
+   exp:'A∪B は A と B の少なくとも一方に含まれる要素全体。<br>A={1,2,4,8,16}，B={2,4,6,8,10}<br>∴ A∪B = {1, 2, 4, 6, 8, 10, 16}'},
+
+  // ===== 問10: 集合の包含関係 =====
+  {id:'p10_1', prob:'問10(1)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問10(1)</span>次の2つの集合の関係を ⊂，= を使って表せ。<br>A={2, 3, 6}，B = 18の正の約数全体の集合`,
+   choices:['A ⊂ B','A = B','B ⊂ A','A ∩ B = ∅'], answer:0,
+   exp:'18の正の約数：1, 2, 3, 6, 9, 18 → B = {1, 2, 3, 6, 9, 18}<br>A={2,3,6} のすべての要素が B に含まれ，A≠B<br>∴ A ⊂ B'},
+  {id:'p10_2', prob:'問10(2)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問10(2)</span>次の2つの集合の関係を ⊂，= を使って表せ。<br>A={1, 3, 5, 15}，B = 15の正の約数全体の集合`,
+   choices:['A = B','A ⊂ B','B ⊂ A','A ∩ B = ∅'], answer:0,
+   exp:'15の正の約数：1, 3, 5, 15 → B = {1, 3, 5, 15}<br>A = {1, 3, 5, 15} = B<br>∴ A = B'},
+
+  // ===== 問11: 補集合 =====
+  {id:'p11_1', prob:'問11(1)', type:'choice4',
+   text:`<span class="q-num">問11(1)</span>U={1,2,3,…,9} を全体集合とする。<br>A={1,2,4,7,8,9}，B={1,4,6,7,9} のとき<br>Ā（Aの補集合）を求めよ。`,
+   choices:['{3, 5, 6}','{1, 2, 4, 7, 8, 9}','{2, 3, 5, 8}','{3, 5, 6, 7}'], answer:0,
+   exp:'Ā = U − A = {1,2,…,9} − {1,2,4,7,8,9}<br>= {3, 5, 6}'},
+  {id:'p11_2', prob:'問11(2)', type:'choice4',
+   text:`<span class="q-num">問11(2)</span>U={1,2,3,…,9}，A={1,2,4,7,8,9}，B={1,4,6,7,9} のとき<br>Ā∪B̄ を求めよ。`,
+   choices:['{2, 3, 5, 6, 8}','{3, 5}','{3, 5, 6}','{2, 3, 5, 8}'], answer:0,
+   exp:'Ā = {3,5,6}，B̄ = U−B = {2,3,5,8}<br>Ā∪B̄ = {3,5,6}∪{2,3,5,8} = {2, 3, 5, 6, 8}'},
+
+  // ===== 問12: 命題の真偽 =====
+  {id:'p12_1', prob:'問12(1)', type:'choice4',
+   text:`<span class="q-num">問12(1)</span>次の命題の真偽を答えよ。<br>「4の倍数は偶数である」`,
+   choices:['真','偽','どちらでもない','条件による'], answer:0,
+   exp:'4の倍数は 4k（kは整数）と表せる。4k = 2&times;(2k) なので偶数。よって<strong>真</strong>。'},
+  {id:'p12_2', prob:'問12(2)', type:'choice4',
+   text:`<span class="q-num">問12(2)</span>次の命題の真偽を答えよ。<br>「正三角形は二等辺三角形である」`,
+   choices:['真','偽','定義による','根号の取り方による'], answer:0,
+   exp:'正三角形は3辺が等しいので，特に2辺が等しい。よって二等辺三角形である。<br>∴ <strong>真</strong>'},
+
+  // ===== 問13: 命題の逆 =====
+  {id:'p13_1', prob:'問13(1)', type:'choice4',
+   text:`<span class="q-num">問13(1)</span>n は自然数とする。<br>「n は10の倍数 ⇒ n は5の倍数」<br>この命題の<strong>逆</strong>は？`,
+   choices:['n は5の倍数 ⇒ n は10の倍数','n は10の倍数でない ⇒ n は5の倍数でない','n は5の倍数でない ⇒ n は10の倍数でない','n は10の倍数 ⇒ n は5の倍数でない'], answer:0,
+   exp:'逆は仮定と結論を入れ替えたもの。<br>「n は5の倍数 ⇒ n は10の倍数」（偽：例えば5は5の倍数だが10の倍数でない）'},
+  {id:'p13_2', prob:'問13(2)', type:'choice4',
+   text:`<span class="q-num">問13(2)</span>x は実数とする。<br>「x = 5 ⇒ x² = 25」<br>この命題の<strong>逆</strong>は？`,
+   choices:[`x${SP('','2')} = 25 ⇒ x = 5`,`x${SP('','2')} = 5 ⇒ x = 25`,`x ≠ 5 ⇒ x${SP('','2')} ≠ 25`,`x${SP('','2')} ≠ 25 ⇒ x ≠ 5`], answer:0,
+   exp:`逆は「x${SP('','2')} = 25 ⇒ x = 5」<br>x=−5 のとき x${SP('','2')}=25 だが x≠5 なので<strong>偽</strong>。<br>（元の命題「x=5 ⇒ x${SP('','2')}=25」は真）`},
+
+  // ===== 問14: 必要・十分条件 =====
+  {id:'p14_1', prob:'問14(1)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問14(1)</span>x は実数とする。<br>「x${SP('','2')} = 16」は「x = &minus;4」であるための何条件か？`,
+   choices:['必要条件','十分条件','必要十分条件','どれでもない'], answer:0,
+   exp:`p: x${SP('','2')}=16，q: x=&minus;4 とする。<br>q → p ：x=&minus;4 なら x${SP('','2')}=(−4)${SP('','2')}=16 ✓（qはpの十分条件，pはqの必要条件）<br>p → q ：x${SP('','2')}=16 なら x=±4 なので x=−4 とは限らない ✗<br>∴ x${SP('','2')}=16 は x=&minus;4 の <strong>必要条件</strong>`},
+  {id:'p14_2', prob:'問14(2)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問14(2)</span>x, y は実数とする。<br>「x = 0」は「xy = 0」であるための何条件か？`,
+   choices:['十分条件','必要条件','必要十分条件','どれでもない'], answer:0,
+   exp:`p: x=0，q: xy=0 とする。<br>p → q ：x=0 なら xy=0&times;y=0 ✓（pはqの十分条件）<br>q → p ：xy=0 なら x=0 または y=0 → x=0 とは限らない ✗<br>∴ x=0 は xy=0 の <strong>十分条件</strong>`},
+  {id:'p14_3', prob:'問14(3)', type:'choice4', noShuffle:true,
+   text:`<span class="q-num">問14(3)</span>x, y は実数とする。<br>「3x = 3y」は「x = y」であるための何条件か？`,
+   choices:['必要条件','十分条件','必要十分条件','どれでもない'], answer:2,
+   exp:'p: 3x=3y，q: x=y とする。<br>p → q ：3x=3y ⇒ x=y ✓<br>q → p ：x=y ⇒ 3x=3y ✓<br>∴ 3x=3y は x=y の <strong>必要十分条件</strong>'},
+
+  // ===== 問15: 条件の否定 =====
+  {id:'p15_1', prob:'問15(1)', type:'choice4',
+   text:`<span class="q-num">問15(1)</span>x, y は実数とする。<br>次の条件の否定を答えよ。<br>「x ≧ 1 または y ≧ 1」`,
+   choices:['x < 1 かつ y < 1','x < 1 または y < 1','x ≧ 1 かつ y ≧ 1','x ≦ 1 かつ y ≦ 1'], answer:0,
+   exp:'ド・モルガンの法則：¬(p ∨ q) = ¬p ∧ ¬q<br>「x ≧ 1 または y ≧ 1」の否定<br>= 「x &lt; 1 <strong>かつ</strong> y &lt; 1」'},
+  {id:'p15_2', prob:'問15(2)', type:'choice4',
+   text:`<span class="q-num">問15(2)</span>x, y は実数とする。<br>次の条件の否定を述べよ。<br>「x, y はともに正」`,
+   choices:['x, y の少なくとも一方は 0 以下','x, y の少なくとも一方は負','x, y はともに 0 以下','x, y はともに負でない'], answer:0,
+   exp:'「x, y はともに正」= 「x &gt; 0 かつ y &gt; 0」<br>¬(p ∧ q) = ¬p ∨ ¬q（ド・モルガン）<br>否定 = 「x ≦ 0 または y ≦ 0」<br>= <strong>x, y の少なくとも一方は 0 以下</strong>'},
+
+  // ===== 問16: 対偶 =====
+  {id:'p16_1', prob:'問16(1)', type:'choice4',
+   text:`<span class="q-num">問16(1)</span>x は実数とする。<br>「x &gt; 3 ならば x &gt; 0」の対偶を答えよ。また真偽を答えよ。`,
+   choices:['「x ≦ 0 ならば x ≦ 3」（真）','「x ≦ 3 ならば x ≦ 0」（偽）','「x > 0 ならば x > 3」（偽）','「x ≦ 0 ならば x ≦ 3」（偽）'], answer:0,
+   exp:'対偶は仮定・結論をともに否定して入れ替える。<br>「x &gt; 3 ⇒ x &gt; 0」の対偶：「x ≦ 0 ⇒ x ≦ 3」<br>x ≦ 0 のとき明らかに x ≦ 3 なので<strong>真</strong>。元の命題も真。'},
+  {id:'p16_2', prob:'問16(2)', type:'choice4',
+   text:`<span class="q-num">問16(2)</span>x, y は実数とする。<br>「x+y &gt; 5 ならば x &gt; 2 または y &gt; 3」<br>の対偶を答えよ。また真偽を答えよ。`,
+   choices:['「x ≦ 2 かつ y ≦ 3 ⇒ x+y ≦ 5」（真）','「x ≦ 2 または y ≦ 3 ⇒ x+y ≦ 5」（真）','「x ≦ 2 かつ y ≦ 3 ⇒ x+y ≦ 5」（偽）','「x &gt; 2 かつ y &gt; 3 ⇒ x+y &gt; 5」（真）'], answer:0,
+   exp:'対偶は「仮定・結論をともに否定して入れ替え」る。<br>・「x &gt; 2 または y &gt; 3」の否定 → 「x ≦ 2 かつ y ≦ 3」（ド・モルガン）<br>・「x+y &gt; 5」の否定 → 「x+y ≦ 5」<br>∴ 対偶：「x ≦ 2 かつ y ≦ 3 ⇒ x+y ≦ 5」<br>x ≦ 2 かつ y ≦ 3 のとき x+y ≦ 2+3 = 5 ✓ → <strong>真</strong><br>よって元の命題も<strong>真</strong>。'},
+
+  // ===== 問17:  // ===== 問17: 帰謬法（背理法）による証明 =====
+  {id:'p17_1', prob:'問17(1)', type:'choice4',
+   text:`<span class="q-num">問17(1)</span>「${SQ('2')} は無理数」であることを用いて，「1+${SQ('2')} は無理数である」を証明する。<br>背理法で，1+${SQ('2')} が有理数 r とおいたとき，何が矛盾するか？`,
+   choices:[`${SQ('2')} = r−1 が有理数となり，${SQ('2')} が無理数であることに矛盾`,`${SQ('2')} = r+1 が有理数となり，${SQ('2')} が無理数であることに矛盾`,'r が整数になることに矛盾','r が負になることに矛盾'], answer:0,
+   exp:`1+${SQ('2')} = r とおくと ${SQ('2')} = r&minus;1<br>r は有理数なので r&minus;1 も有理数。<br>しかし ${SQ('2')} は無理数なので矛盾。<br>∴ 1+${SQ('2')} は無理数 ■`},
+  {id:'p17_2', prob:'問17(2)', type:'choice4',
+   text:`<span class="q-num">問17(2)</span>「${SQ('2')} は無理数」であることを用いて，「5${SQ('2')} は無理数である」を証明する。<br>背理法で，5${SQ('2')} が有理数 r とおいたとき，何が矛盾するか？`,
+   choices:[`${SQ('2')} = ${FR('r','5')} が有理数となり，${SQ('2')} が無理数であることに矛盾`,`${SQ('2')} = 5r が有理数となり，${SQ('2')} が無理数であることに矛盾`,'rが0になることに矛盾','rが整数でなくなることに矛盾'], answer:0,
+   exp:`5${SQ('2')} = r とおくと ${SQ('2')} = ${FR('r','5')}<br>r は有理数なので ${FR('r','5')} も有理数。<br>しかし ${SQ('2')} は無理数なので矛盾。<br>∴ 5${SQ('2')} は無理数 ■`},
+
+  // ===== 問18: 対偶を利用した証明 =====
+  {id:'p18_1', prob:'問18(1)', type:'choice4',
+   text:`<span class="q-num">問18(1)</span>m, n は整数とする。<br>「mn が奇数ならば，m と n はともに奇数である」<br>を対偶を用いて証明する。対偶の命題は何か？`,
+   choices:['「m か n の少なくとも一方が偶数 ⇒ mn は偶数」','「mn が偶数 ⇒ m か n の少なくとも一方が偶数」','「m と n がともに奇数 ⇒ mn は奇数」','「mn が奇数 ⇒ m と n がともに偶数」'], answer:0,
+   exp:'元の命題の対偶：仮定・結論を否定して入れ替える。<br>「mn が奇数」の否定 → 「mn が偶数」<br>「m と n がともに奇数」の否定 → 「m か n の少なくとも一方が偶数」<br><br>対偶：「m か n の少なくとも一方が偶数 ⇒ mn は偶数」<br>（例：m=2k とおくと mn=2kn で偶数）<br>対偶が真なので元の命題も真。■'},
+  {id:'p18_2', prob:'問18(2)', type:'choice4',
+   text:`<span class="q-num">問18(2)</span>m, n は整数とする。<br>「m${SP('','2')}+n${SP('','2')} が奇数ならば，mn は偶数」<br>を対偶を利用して証明する際，対偶の命題は？`,
+   choices:[`「mn が奇数 ⇒ m${SP('','2')}+n${SP('','2')} は偶数」`,`「mn が偶数 ⇒ m${SP('','2')}+n${SP('','2')} は奇数」`,`「m${SP('','2')}+n${SP('','2')} が偶数 ⇒ mn は奇数」`,`「mn が奇数 ⇒ m${SP('','2')}+n${SP('','2')} は奇数」`], answer:0,
+   exp:`元の命題の対偶：「mn が奇数 ⇒ m${SP('','2')}+n${SP('','2')} は偶数」<br>mn が奇数 → m, n ともに奇数（問18(1)の結果）<br>m=2a+1, n=2b+1 とおくと<br>m${SP('','2')}+n${SP('','2')} = (2a+1)${SP('','2')}+(2b+1)${SP('','2')} = 4a${SP('','2')}+4a+1+4b${SP('','2')}+4b+1<br>= 4(a${SP('','2')}+b${SP('','2')}+a+b)+2 = 2(2(a${SP('','2')}+b${SP('','2')}+a+b)+1) → 偶数<br>対偶が真なので元の命題も真。■`},
+];
+
+// ===== シャッフル（Fisher-Yates） =====
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+// ===== 全キュー生成 =====
+function buildFullQueue(){
+  return PROBLEMS.map(p=>{
+    let choices=[...p.choices];
+    let answer=p.answer;
+    if(!p.noShuffle && p.type==='choice4'){
+      // Fisher-Yates
+      const indexed=choices.map((c,i)=>({c,orig:i}));
+      for(let i=indexed.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [indexed[i],indexed[j]]=[indexed[j],indexed[i]];
+      }
+      choices=indexed.map(x=>x.c);
+      answer=indexed.findIndex(x=>x.orig===p.answer);
+    }
+    return{...p,choices,answer};
+  });
+}
+
+// ===== 敵キャラ定義 =====
+const ENEMIES={
+  'p1':  {name:'不等号スライム',emoji:'🟩',lv:1,maxHp:6,atk:2,reward:'不等号の向きをマスター！'},
+  'p3':  {name:'一次不等式ウルフ',emoji:'🐺',lv:3,maxHp:8,atk:3,reward:'一次不等式の解法を習得！'},
+  'p4':  {name:'連立不等式オーク',emoji:'👹',lv:5,maxHp:2,atk:4,reward:'連立不等式を制覇！'},
+  'p5':  {name:'絶対値マンティコア',emoji:'🦁',lv:6,maxHp:2,atk:4,reward:'連続不等式をマスター！'},
+  'p6':  {name:'文章題トロル',emoji:'🧌',lv:7,maxHp:1,atk:4,reward:'文章題の立式を習得！'},
+  'p7':  {name:'根号魔女',emoji:'🧙',lv:8,maxHp:2,atk:4,reward:'分母の有理化をマスター！'},
+  'p8':  {name:'根号計算ウィザード',emoji:'🔮',lv:9,maxHp:1,atk:4,reward:'根号を使った計算をマスター！'},
+  'p9':  {name:'集合スライム',emoji:'🫧',lv:10,maxHp:2,atk:4,reward:'集合の∩・∪を習得！'},
+  'p10': {name:'包含フェニックス',emoji:'🦅',lv:11,maxHp:2,atk:5,reward:'集合の⊂・=を制覇！'},
+  'p11': {name:'補集合ゴースト',emoji:'👻',lv:12,maxHp:2,atk:5,reward:'補集合をマスター！'},
+  'p12': {name:'命題の番人ヴァンパイア',emoji:'🧛',lv:10,maxHp:2,atk:5,reward:'命題の真偽を習得！'},
+  'p13': {name:'逆命題ゴーレム',emoji:'🪨',lv:11,maxHp:2,atk:5,reward:'命題の逆を制覇！'},
+  'p14': {name:'必要十分条件キメラ',emoji:'🦅',lv:12,maxHp:3,atk:5,reward:'必要・十分条件をマスター！'},
+  'p15': {name:'否定魔道士',emoji:'🧙‍♂️',lv:13,maxHp:2,atk:5,reward:'否定の技を習得！'},
+  'p16': {name:'対偶ヒドラ',emoji:'🐲',lv:14,maxHp:2,atk:5,reward:'対偶をマスター！'},
+  'p17': {name:'背理法ウィザード',emoji:'⚗️',lv:15,maxHp:2,atk:6,reward:'背理法証明を習得！'},
+  'p18': {name:'証明大魔王',emoji:'👑',lv:18,maxHp:2,atk:7,reward:'証明問題を完全制覇！',boss:true},
+};
+function getEnemy(id){
+  const prefix=id.replace(/_\d+$/,'');
+  return ENEMIES[prefix]||{name:'謎の敵',emoji:'👾',lv:1,maxHp:1,atk:3,reward:'何かを習得！'};
+}
+
+// ===== ゲーム状態 =====
+const CHUNK_SIZE=12;
+const HERO_MAX=20;
+let fullQueue=[],queue=[],chunkStart=0,chunkEnd=0;
+let qi=0,score=0,answered=0,heroHp=HERO_MAX,combo=0,coins=0,maxCombo=0;
+let hintUsed=false,noDamage=true,noHint=true;
+let enemyCurHp={},enemyMaxHp={};
+
+function getEnemyId(qid){return qid.replace(/_\d+$/,'');}
+
+function initEnemyHp(start,end){
+  for(let i=start;i<end;i++){
+    const eid=getEnemyId(fullQueue[i].id);
+    if(!(eid in enemyCurHp)){
+      const e=getEnemy(fullQueue[i].id);
+      enemyCurHp[eid]=e.maxHp;
+      enemyMaxHp[eid]=e.maxHp;
+    }
+  }
+}
+
+function calcChunkEnd(start){
+  const total=fullQueue.length;
+  let end=Math.min(start+CHUNK_SIZE,total);
+  if(end<total){
+    const endProbPrefix=getEnemyId(fullQueue[end].id);
+    if(getEnemyId(fullQueue[end-1].id)===endProbPrefix){
+      while(end<total&&getEnemyId(fullQueue[end].id)===endProbPrefix)end++;
+    }
+  }
+  return Math.min(end,total);
+}
+
+function startChunk(start){
+  chunkStart=start;
+  chunkEnd=calcChunkEnd(start);
+  // このチャンク内の敵HPリセット
+  const seen=new Set();
+  for(let i=chunkStart;i<chunkEnd;i++){
+    const eid=getEnemyId(fullQueue[i].id);
+    if(!seen.has(eid)){
+      seen.add(eid);
+      const e=getEnemy(fullQueue[i].id);
+      enemyCurHp[eid]=e.maxHp;
+      enemyMaxHp[eid]=e.maxHp;
+    }
+  }
+  queue=fullQueue.slice(chunkStart,chunkEnd);
+  score=0;answered=0;heroHp=HERO_MAX;combo=0;coins=0;maxCombo=0;
+  noDamage=true;noHint=true;hintUsed=false;qi=0;
+}
+
+// ===== 画面切り替え =====
+const screens=['titleScreen','battleScreen','resultScreen','clearScreen','gameoverScreen','stageClearScreen'];
+function show(id){screens.forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));}
+
+// ===== ログ =====
+function log(l1,l2=''){
+  document.getElementById('logLine1').innerHTML=l1;
+  document.getElementById('logLine2').innerHTML=l2||'';
+}
+
+// ===== HUD更新 =====
+function updateHUD(){
+  const hb=document.getElementById('heroBar');
+  hb.style.width=(heroHp/HERO_MAX*100)+'%';
+  hb.style.background=heroHp/HERO_MAX>0.5?'linear-gradient(90deg,#22c55e,#16a34a)':heroHp/HERO_MAX>0.25?'linear-gradient(90deg,#f59e0b,#d97706)':'linear-gradient(90deg,#ef4444,#b91c1c)';
+  document.getElementById('heroHpText').textContent=`${heroHp}/${HERO_MAX}`;
+  document.getElementById('scoreDisp').textContent=`${score}/${answered}`;
+  document.getElementById('comboDisp').textContent=combo;
+  document.getElementById('coinDisp').textContent=coins;
+  document.getElementById('hintBtn').textContent=`ヒント(3枚)`;
+}
+
+function updateEnemyHUD(q){
+  const eid=getEnemyId(q.id);
+  const e=getEnemy(q.id);
+  const cur=enemyCurHp[eid]??e.maxHp;
+  const max=enemyMaxHp[eid]??e.maxHp;
+  document.getElementById('enemyBar').style.width=(Math.max(0,cur)/max*100)+'%';
+  document.getElementById('enemyHpText').textContent=`${Math.max(0,cur)}/${max}`;
+  document.getElementById('enemyLabel').textContent=`${e.emoji} 敵HP`;
+  const em=document.getElementById('enemyEmoji');
+  em.textContent=e.emoji;
+  em.className='enemy-emoji'+(e.boss?' boss-glow':'');
+  document.getElementById('enemyName').textContent=`${e.name} Lv.${e.lv}`;
+  document.getElementById('enemyInfoText').textContent=`HP ${Math.max(0,cur)}/${max}`;
+}
+
+// ===== フラッシュ =====
+function flash(color){
+  const f=document.getElementById('flash');
+  f.style.background=color;f.style.opacity='0.25';
+  setTimeout(()=>f.style.opacity='0',300);
+}
+
+// ===== コンボバナー =====
+function showComboBanner(n){
+  const b=document.getElementById('comboBanner');
+  b.innerHTML=`🔥 ${n} COMBO！`;b.style.opacity='1';
+  setTimeout(()=>b.style.opacity='0',800);
+}
+
+// ===== 問題読み込み =====
+function loadQuestion(idx){
+  qi=idx;
+  if(qi>=queue.length){showClear();return;}
+  const q=queue[qi];
+  hintUsed=false;
+  document.getElementById('hintBtn').disabled=false;
+  document.getElementById('hintBtn').textContent='ヒント(3枚)';
+  document.getElementById('qText').innerHTML=q.text;
+  updateEnemyHUD(q);
+  updateHUD();
+  buildAnswerArea(q);
+  show('battleScreen');
+}
+
+function buildAnswerArea(q){
+  const area=document.getElementById('answerArea');
+  area.innerHTML='';
+  if(q.type==='choice4'){
+    const grid=document.createElement('div');
+    grid.className='choices';
+    const labels=['ア','イ','ウ','エ'];
+    q.choices.forEach((c,i)=>{
+      const btn=document.createElement('button');
+      btn.className='choice-btn';
+      btn.id=`cb${i}`;
+      const lbl=document.createElement('span');
+      lbl.className='choice-label';
+      lbl.textContent=labels[i]+'. ';
+      btn.appendChild(lbl);
+      if(/<[a-z]/i.test(c)){
+        const span=document.createElement('span');
+        span.innerHTML=c;
+        btn.appendChild(span);
+      } else {
+        btn.appendChild(document.createTextNode(c));
+      }
+      btn.onclick=()=>checkAnswer(i,q);
+      grid.appendChild(btn);
+    });
+    area.appendChild(grid);
+  }
+}
+
+// ===== ヒント =====
+function useHint(){
+  if(hintUsed||coins<3)return;
+  const q=queue[qi];
+  const wrongIdxs=q.choices.map((_,i)=>i).filter(i=>i!==q.answer);
+  const active=wrongIdxs.filter(i=>{const b=document.getElementById(`cb${i}`);return b&&!b.classList.contains('grayed')&&!b.disabled;});
+  if(active.length===0)return;
+  const target=active[Math.floor(Math.random()*active.length)];
+  const btn=document.getElementById(`cb${target}`);
+  if(btn){btn.classList.add('grayed');btn.disabled=true;}
+  coins-=3;hintUsed=true;noHint=false;
+  document.getElementById('hintBtn').disabled=true;
+  document.getElementById('hintBtn').textContent='使用済み';
+  updateHUD();
+  log('💡 ヒント使用！ 3コイン消費。誤答を1つ除外した。');
+}
+
+// ===== 答え合わせ =====
+function checkAnswer(chosen,q){
+  // 全ボタン無効化
+  document.querySelectorAll('.choice-btn').forEach(b=>b.disabled=true);
+  answered++;
+  const correct=(chosen===q.answer);
+  const eid=getEnemyId(q.id);
+  const e=getEnemy(q.id);
+
+  if(correct){
+    score++;combo++;if(combo>maxCombo)maxCombo=combo;
+    coins+=1+(combo>=5?2:combo>=3?1:0);
+    enemyCurHp[eid]=Math.max(0,(enemyCurHp[eid]??e.maxHp)-1);
+    document.getElementById(`cb${chosen}`).classList.add('correct');
+    flash('#22c55e44');
+    document.getElementById('enemyEmoji').classList.add('shake');
+    setTimeout(()=>document.getElementById('enemyEmoji').classList.remove('shake'),400);
+    if(combo>=3)showComboBanner(combo);
+    const dmg=combo>=5?3:2;
+    log(`✅ 正解！${e.emoji}に ${dmg} ダメージ！`,combo>=2?`🔥 ${combo}コンボ！ コイン+${1+(combo>=5?2:combo>=3?1:0)}`:'');
+    // 敵を倒したか
+    if(enemyCurHp[eid]<=0){
+      setTimeout(()=>{
+        document.getElementById('enemyEmoji').classList.add('dead');
+        log(`💥 ${e.name}を倒した！`,`✨ 「${e.reward}」`);
+      },400);
+    }
+  }else{
+    combo=0;
+    heroHp=Math.max(0,heroHp-e.atk);
+    noDamage=false;
+    document.getElementById(`cb${chosen}`).classList.add('wrong');
+    document.getElementById(`cb${q.answer}`).classList.add('correct');
+    flash('#ef444444');
+    log(`❌ 不正解… ${e.atk} ダメージを受けた…`,`😢 勇者HP: ${heroHp}/${HERO_MAX}`);
+  }
+  updateHUD();
+  updateEnemyHUD(q);
+
+  setTimeout(()=>showResult(correct,q),700);
+}
+
+// ===== 結果画面 =====
+function showResult(correct,q){
+  document.getElementById('resultIcon').textContent=correct?'✅':'❌';
+  document.getElementById('resultLabel').innerHTML=correct?'<span class="result-correct">正解！</span>':'<span class="result-wrong">不正解…</span>';
+  document.getElementById('expBody').innerHTML=q.exp;
+  document.getElementById('nextBtn').onclick=()=>{
+    if(heroHp<=0){showGameover();return;}
+    const nextQi=qi+1;
+    if(nextQi>=queue.length){
+      // セッション/全問チェック
+      const isAllDone=(chunkEnd>=fullQueue.length);
+      if(isAllDone)showAllClear();
+      else showStageClear();
+    }else{
+      loadQuestion(nextQi);
+    }
+  };
+  show('resultScreen');
+}
+
+// ===== ゲームオーバー =====
+function showGameover(){
+  document.getElementById('goScore').innerHTML=`正解数: ${score} / ${answered}`;
+  show('gameoverScreen');
+}
+
+// ===== ステージクリア =====
+function showStageClear(){
+  document.getElementById('stageInfo').innerHTML=`正解: ${score} / ${answered}　最大コンボ: ${maxCombo}`;
+  const remain=fullQueue.length-chunkEnd;
+  document.getElementById('remainInfo').innerHTML=`残り ${remain} 問！続きに挑戦しよう！`;
+  document.getElementById('continueBtn').onclick=()=>{startChunk(chunkEnd);loadQuestion(0);};
+  show('stageClearScreen');
+}
+
+// ===== 全問クリア =====
+function showAllClear(){
+  // 実績
+  const badges=[
+    {id:'perfect',name:'パーフェクト 👑',cond:score===PROBLEMS.length},
+    {id:'noHit',name:'ノーダメージ 🛡',cond:noDamage},
+    {id:'combo5',name:'コンボマスター 🔥',cond:maxCombo>=5},
+    {id:'rich',name:'コイン長者 🪙',cond:coins>=10},
+    {id:'noHint',name:'ヒント不要 💡',cond:noHint},
+    {id:'survivor',name:'ぎりぎり生還 ❤',cond:heroHp<=3&&heroHp>0},
+  ];
+  const rate=Math.round(score/PROBLEMS.length*100);
+  const title=rate===100?'🏅 数学の覇者':rate>=80?'⚔ 不等式の剣士':rate>=60?'📚 命題の探求者':'🌱 証明見習い';
+  document.getElementById('finalScore').innerHTML=`正解: ${score} / ${PROBLEMS.length} (${rate}%)　最大コンボ: ${maxCombo}`;
+  document.getElementById('titleBadge').textContent=title;
+  const bg=document.getElementById('badgeGrid');
+  bg.innerHTML='';
+  badges.forEach(b=>{
+    const d=document.createElement('div');
+    d.className='badge'+(b.cond?' earned':'');
+    d.textContent=b.name;
+    bg.appendChild(d);
+  });
+  show('clearScreen');
+}
+
+// ===== 起動 =====
+document.getElementById('startBtn').onclick=()=>{
+  fullQueue=buildFullQueue();
+  enemyCurHp={};enemyMaxHp={};
+  startChunk(0);
+  loadQuestion(0);
+};
+document.getElementById('restartBtn').onclick=()=>{
+  fullQueue=buildFullQueue();enemyCurHp={};enemyMaxHp={};
+  startChunk(0);loadQuestion(0);
+};
+document.getElementById('retryBtn').onclick=()=>{
+  startChunk(chunkStart);loadQuestion(0);
+};
+document.getElementById('restartFromStageBtn').onclick=()=>{
+  fullQueue=buildFullQueue();enemyCurHp={};enemyMaxHp={};
+  startChunk(0);loadQuestion(0);
+};
+</script>
+</body>
+</html>
